@@ -1,0 +1,13 @@
+{
+  "name": "Task-yourself",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {
+    "electron": "^22.0.3",
+    "electron-builder": "^23.6.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  }
+}
