@@ -24,11 +24,11 @@ const createWindow = () => {
 		minHeight: 40,
 		maxHeight: 40,
 		minWidth: 1280,
-		frame: false,
+		frame: true,
 		enableLargerThanScreen: false,
 		title: 'Task-yourself',
 		maximizable: false,
-		movable: false,
+		movable: true,
 		minimizable: false,
 		icon: 'src/images/dino.ico',
 		webPreferences: {
@@ -36,11 +36,11 @@ const createWindow = () => {
 			// preload: path.join(__dirname, 'preload.js'),
 			nodeIntegration: true,
 			contextIsolation: false,
-			devTools: false,
+			devTools: true,
 		},
 	});
 
-	win.setBounds({ x: 0, y: 0, width: screenWidth });
+	// win.setBounds({ x: 0, y: 0, width: screenWidth });
 	win.loadFile('src/index.html');
 	win.title = 'Task-yourself';
 
