@@ -7,10 +7,18 @@ export default function formatCountdownText(time) {
 }
 
 class Task {
-	constructor({ id, title, createdAt, profile, isBreakTask }) {
+	constructor({
+		id,
+		title,
+		createdAt,
+		profile,
+		isBreakTask,
+		completedTasks,
+		ID,
+	}) {
 		const id = id;
 		let title = title;
-		const createdAT = createdAt;
+		const createdAt = createdAt;
 		let taskEl = null;
 		let children = {};
 		const profile = profile;
@@ -87,7 +95,18 @@ class Task {
 			// check if the taskEl still exists after removal as variable, if so equal it to null not to waste memory
 		};
 
-		this.addToCompletedTaskList = () => {};
+		this.addToCompletedTaskList = () => {
+			completedTasks[ID] = {
+				title,
+				description,
+				createdAt,
+				completedAt,
+				duration: this.formatCountdownText(duration / 1000),
+				profile,
+				isBreakTask,
+				category,
+			};
+		};
 
 		this.formatCountdownText = (time) => {
 			// getting the value of minutes
