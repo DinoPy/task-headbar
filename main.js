@@ -10,6 +10,7 @@ const path = require('path');
 const ipc = ipcMain;
 const fs = require('fs');
 const homeDir = require('os').homedir();
+const player = require('play-sound')((opts = {}));
 
 app.setName('Task yourself');
 app.setAppUserModelId(app.name);
@@ -20,15 +21,16 @@ const createWindow = () => {
 	const screenWidth = screen.getPrimaryDisplay().workAreaSize.width;
 	win = new BrowserWindow({
 		width: screenWidth,
-		height: 40,
+		height: 400,
 		minHeight: 40,
-		maxHeight: 40,
+		maxHeight: 400,
 		minWidth: 1280,
 		frame: true,
 		enableLargerThanScreen: false,
 		title: 'Task-yourself',
 		maximizable: false,
 		movable: true,
+		resizable: true,
 		minimizable: false,
 		icon: 'src/images/dino.ico',
 		webPreferences: {
@@ -40,7 +42,7 @@ const createWindow = () => {
 		},
 	});
 
-	// win.setBounds({ x: 0, y: 0, width: screenWidth });
+	win.setBounds({ x: 0, y: 0, width: screenWidth });
 	win.loadFile('src/index.html');
 	win.title = 'Task-yourself';
 
@@ -71,19 +73,25 @@ const createWindow = () => {
 		new Notification({
 			title: 'Interval Ended',
 			body: args,
-			silent: false,
+			silent: true,
 			icon: 'src/images/dino.ico',
 			sound: path.join(__dirname, 'src/sounds/smack.ogg'),
 			timeoutType: 'never',
 		}).show();
+		console.log(args);
+		const sound =
+			args === 'Start pause.' ? 'Oh you want a break' : 'Get Back to Work';
+		player.play(`src/sounds/${sound}.mp3`, (err) => {
+			console.log(err);
+		});
 	});
 };
 
 app
 	.whenReady()
 	.then(() => {
-		globalShortcut.register('CommandOrControl+R', () => {});
-		globalShortcut.register('CommandOrControl+Shift+R', () => {});
+		// globalShortcut.register('CommandOrControl+R', () => {});
+		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
 			win.show();
 			win.webContents.send('addTask');
@@ -92,7 +100,7 @@ app
 	.then(createWindow);
 
 app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') app.quit();
+	app.quit();
 });
 app.on('activate', () => {
 	if (BrowserWindow.getAllwindows().length === 0) createWindow();

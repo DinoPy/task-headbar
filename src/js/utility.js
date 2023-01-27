@@ -1,32 +1,45 @@
-export default function formatCountdownText(time) {
-	let minutes = Math.floor(time / 60);
+export function formatCountdownText(time) {
+	let minutes = Math.floor((time / 60) % 60);
+	let hours = Math.floor(time / 60 / 60);
 	let seconds = time % 60;
-	return `${minutes < 10 ? '0' + minutes : minutes} : ${
-		seconds < 10 ? '0' + seconds : seconds
-	}`;
+	return `${hours > 0 ? (hours < 10 ? '0' + hours : hours) + ' : ' : ''} ${
+		minutes < 10 ? '0' + minutes : minutes
+	} : ${seconds < 10 ? '0' + seconds : seconds}`;
 }
 
-class Task {
+export const formatCurrentDate = () => {
+	// get current time.
+	const today = new Date();
+	// format the returned value to desired form
+	return `${
+		today.getMonth() + 1
+	}/${today.getDate()}/${today.getFullYear()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+};
+
+export class Task {
 	constructor({
-		id,
-		title,
-		createdAt,
-		profile,
-		isBreakTask,
+		idNew,
+		titleNew,
+		createdAtNew,
+		profileNew,
+		isBreakTaskNew,
+		taskElNew,
+		childrenEl,
 		completedTasks,
-		ID,
+		tasks,
+		taskContainer,
+		barDetails,
 	}) {
-		const id = id;
-		let title = title;
-		const createdAt = createdAt;
-		let taskEl = null;
-		let children = {};
-		const profile = profile;
-		const isBreakTask = isBreakTask;
+		const id = idNew;
+		let title = titleNew;
+		const createdAt = createdAtNew;
+		let taskEl = taskElNew;
+		let children = childrenEl;
+		const profile = profileNew;
+		const isBreakTask = isBreakTaskNew;
 		let isFocused = false;
 		let taskTimerInterval = null;
 		let description = 'no description';
-		let completedAt = null;
 		let duration = 0;
 		let category = '';
 		let toggledFocusAt = 0;
@@ -39,73 +52,109 @@ class Task {
 			description = newDescription;
 		};
 
-		// might not be needed as we can use newDate the value won't come from outside the instance
-		this.updateCompletedAt = (completionDate) => {
-			completedAt = completionDate;
+		this.getIsFocusedStatus = () => {
+			return isFocused;
 		};
 
 		this.addFocus = () => {
 			isFocused = true;
-			this.startTimer();
-
-			// TO DO
-			// add the class to difference the focused task from non focused ones
+			if (barDetails.barStatus === 'active' && barDetails.isCountingDown)
+				this.startTimer();
+			taskEl.classList.add('activeTask');
+			children.timerEl.style.color = '#1b1d23';
 		};
 
 		this.removeFocus = () => {
 			isFocused = false;
 			this.stopTimer();
-
-			// TO DO
-			// remove class that differences the focused tasks from non focused ones
+			taskEl.classList.remove('activeTask');
+			children.timerEl.style.color = 'gray';
 		};
 
 		this.startTimer = () => {
 			// setting the timeElapsed to duration will allow to save how much time has passed if the task is toggled on and off.
 			// the value is devided by 1000 not to use MS
-			let taskTimeElapsed = duration / 1000;
-
+			let taskTimeElapsed = Math.floor(duration / 1000);
+			console.log(taskTimeElapsed);
 			// settings up the interval
 			taskTimerInterval = setInterval(function () {
 				taskTimeElapsed++;
-				children.timer.textContent = formatCountdownText(taskTimeElapsed);
+				children.timerEl.textContent = formatCountdownText(taskTimeElapsed);
 			}, 1000);
-
-			// cancel the display none property so the timer shows
-			children.timer.display = '';
 
 			// update when the task was focused
 			toggledFocusAt = new Date().getTime();
+
+			// play animation when timer is counting
+			taskEl.style.animationPlayState = 'running';
 		};
 
 		this.stopTimer = () => {
 			// stop the interval timer
 			clearInterval(taskTimerInterval);
 
-			// hide the timer
-			children.timer.display = 'none';
-
 			// update the duration
-			duration += new Date().getTime() - toggledFocusAt;
+			if (toggledFocusAt > 0) duration += new Date().getTime() - toggledFocusAt;
+
+			// pause animation when timer is not counting
+			taskEl.style.animationPlayState = 'paused';
 		};
 
 		this.destroySelfFromDOM = () => {
 			taskEl.remove();
-
 			// check if the taskEl still exists after removal as variable, if so equal it to null not to waste memory
 		};
 
 		this.addToCompletedTaskList = () => {
-			completedTasks[ID] = {
+			completedTasks[id] = {
 				title,
 				description,
 				createdAt,
-				completedAt,
-				duration: this.formatCountdownText(duration / 1000),
+				completedAt: this.formatCurrentDate(),
+				duration: this.formatCountdownText(Math.ceil(duration / 1000)),
 				profile,
 				isBreakTask,
 				category,
 			};
+
+			console.log(completedTasks);
+		};
+
+		this.addTaskListeners = () => {
+			taskEl.addEventListener('mouseup', (e) => {
+				// which gets the button that's pressed on the mouse 1 being right click
+				if (e.which === 1) {
+					if (isFocused) this.removeFocus();
+					else this.addFocus();
+				} else if (e.which === 2) {
+					this.removeFocus();
+					this.addToCompletedTaskList();
+					this.destroySelfFromDOM();
+					delete tasks[id];
+				}
+			});
+		};
+
+		this.setTaskElUp = () => {
+			taskEl.classList.add('task');
+			taskEl.title = title;
+			taskEl.id = id;
+		};
+
+		this.setChildrenElUp = () => {
+			children.titleEl.classList.add('taskTitle');
+			children.titleEl.textContent = title;
+			children.timerEl.classList.add('activeTaskTimer');
+			children.timerEl.textContent = '00 : 00';
+
+			taskEl.append(children.titleEl);
+			taskEl.append(children.timerEl);
+		};
+
+		this.setTaskUp = () => {
+			this.setTaskElUp();
+			this.setChildrenElUp();
+			taskContainer.append(taskEl);
 		};
 
 		this.formatCountdownText = (time) => {

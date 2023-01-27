@@ -9,5 +9,8 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
+  },
+  "dependencies": {
+    "play-sound": "^1.1.5"
   }
 }

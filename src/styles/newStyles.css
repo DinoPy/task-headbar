@@ -41,7 +41,7 @@ body {
 	position: relative;
 }
 
-.task > p:not(.firstTaskTimer) {
+.task > .taskTitle {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -71,22 +71,6 @@ body {
 	justify-content: flex-end;
 }
 
-@keyframes visual_pointer {
-	from {
-		color: #252525;
-	}
-	40% {
-		color: rgb(189, 177, 5);
-	}
-
-	60% {
-		color: rgb(189, 177, 5);
-	}
-	100% {
-		color: #252525;
-	}
-}
-
 @keyframes Jump {
 	0% {
 		transform: scale(1);
@@ -112,21 +96,23 @@ body {
 	height: 80%;
 }
 
-.task:nth-child(1) {
+.activeTask {
 	animation: 2s Jump ease-out infinite;
+	animation-play-state: paused;
 	background-color: #3cf39ed2;
 	font-size: 1.1rem;
 	font-weight: bold;
 	color: #252525;
 }
 
-.firstTaskTimer {
+.activeTaskTimer {
+	/* display: none; */
+	color: gray;
 	position: absolute;
 	top: 0px;
 	right: 8px;
 	font-size: 10px;
 	font-weight: normal;
-	color: #1b1d23;
 }
 
 .addTaskContainer {

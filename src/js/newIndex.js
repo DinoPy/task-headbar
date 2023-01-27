@@ -1,42 +1,37 @@
 const { ipcRenderer } = require('electron');
 const ipc = ipcRenderer;
+import { Task, formatCurrentDate, formatCountdownText } from './utility.js';
 
 const closeBtn = document.getElementById('closeBtn');
 const countdownText = document.getElementById('countdown');
-const timerBtn = document.getElementById('timerBtn');
 const playPauseBtn = document.getElementById('playPauseIcon');
 const skipPauseBtn = document.getElementById('skipPauseIcon');
 const bodyEl = document.querySelector('body');
 
 let ID = 0;
 // prototypes
-function formatCountdownText() {} // add hours // will be copied to class
-function toggleCountdown() {}
-function startCountdown() {}
-function handleSkipBreak() {}
-function addTask(title) {} // will remain
-function addFirstTaskTimer() {}
-function handleAddTask() {}
-function renderTasks(tasks) {}
-function formatCurrentDate() {} // will be moved to class
+// function toggleCountdown() {}
+// function startCountdown() {}
+// function handleSkipBreak() {}
+// function addTask(title) {} // will remain
+// function handleAddTask() {}
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
 });
 
-// first task timer
-let firstTaskInterval;
-let firstTaskTimeElapsed = 0;
-
 // ------------------- TIMER -------------------- //
-const activeTime = 25 * 60;
-const pauseTime = 5 * 60;
+const activeTime = 0.15 * 60;
+const pauseTime = 0.1 * 60;
 
-let barStatus = 'active';
+let barDetails = {
+	barStatus: 'active',
+	isCountingDown: false,
+};
+
 let countdown = activeTime;
 let countdownInitialValue = countdown;
 let intervalId;
-let isCountingDown = false;
 
 let currentlyTimedTask;
 
@@ -51,15 +46,6 @@ skipPauseBtn.addEventListener('click', handleSkipBreak);
 
 // formats the text
 
-function formatCountdownText(time) {
-	let minutes = Math.floor((time / 60) % 60);
-	let hours = Math.floor(time / 60 / 60);
-	let seconds = time % 60;
-	return `${hours > 0 ? (hours < 10 ? '0' + hours : hours) + ' : ' : ''} ${
-		minutes < 10 ? '0' + minutes : minutes
-	} : ${seconds < 10 ? '0' + seconds : seconds}`;
-}
-
 // starts the countdown
 
 function startCountdown() {
@@ -69,18 +55,21 @@ function startCountdown() {
 		bodyEl.style.backgroundColor = '';
 		if (countdown === 0) {
 			clearInterval(intervalId);
-			clearInterval(firstTaskInterval);
 			bodyEl.style.backgroundColor = '#c74242';
+
+			for (let task in tasks) {
+				tasks[task].stopTimer();
+			}
 			if (countdownInitialValue === activeTime) {
-				ipc.send('Interval-Ended', 'Start pause.');
-				barStatus = 'pause';
+				barDetails.barStatus = 'pause';
 				countdown = pauseTime;
 				countdownInitialValue = countdown;
-
 				skipPauseBtn.style.display = 'inline';
+
+				ipc.send('Interval-Ended', 'Start pause.');
 			} else {
 				countdown = activeTime;
-				barStatus = 'active';
+				barDetails.barStatus = 'active';
 				countdownInitialValue = countdown;
 				skipPauseBtn.style.display = 'none';
 
@@ -89,7 +78,7 @@ function startCountdown() {
 
 			countdownText.textContent = formatCountdownText(countdown);
 			playPauseIcon.src = 'images/play.svg';
-			isCountingDown = false;
+			barDetails.isCountingDown = false;
 		}
 	}, 1000);
 }
@@ -98,37 +87,47 @@ function startCountdown() {
 
 function toggleCountdown() {
 	/// will be renamed to
-	if (isCountingDown === false) {
+	if (barDetails.isCountingDown === false) {
+		// start main countdown
 		startCountdown();
-		if (barStatus === 'active') firstTaskCountdown(currentlyTimedTask);
-		isCountingDown = true;
+
+		barDetails.isCountingDown = true;
 		playPauseBtn.src = 'images/pause.svg';
 		bodyEl.style.backgroundColor = '';
+
+		if (barDetails.barStatus === 'pause') return;
+		// start the time of each focused task
+		for (let task in tasks) {
+			if (tasks[task].getIsFocusedStatus()) tasks[task].startTimer();
+		}
 	} else {
+		// stop the main timer
 		clearInterval(intervalId);
-		clearInterval(firstTaskInterval);
-		isCountingDown = false;
+
+		for (let task in tasks) {
+			tasks[task].stopTimer();
+		}
+
+		barDetails.isCountingDown = false;
 		playPauseBtn.src = 'images/play.svg';
 		bodyEl.style.backgroundColor = '#c74242';
 	}
 
-	if (barStatus === 'pause') {
+	if (barDetails.barStatus === 'pause') {
 		skipPauseBtn.style.display = 'inline';
-	} else {
 	}
 }
 
 function handleSkipBreak() {
 	// clear both intervals not to have duplicates
 	clearInterval(intervalId);
-	clearInterval(firstTaskInterval);
 
 	// update the countdown value to active time value (25 min)
 	countdown = activeTime;
 
 	// change bar status to active and is counting to true
-	barStatus = 'active';
-	isCountingDown = true;
+	barDetails.barStatus = 'active';
+	barDetails.isCountingDown = true;
 
 	// update the initial value of countdown so we have a reference when the pause starts
 	countdownInitialValue = countdown;
@@ -143,7 +142,10 @@ function handleSkipBreak() {
 
 	// start both task and main timers
 	startCountdown();
-	firstTaskCountdown(currentlyTimedTask);
+
+	for (let task in tasks) {
+		if (tasks[task].getIsFocusedStatus()) tasks[task].startTimer();
+	}
 }
 
 // ----------------- ADD TASKS ----------------------- //
@@ -152,8 +154,9 @@ const addTaskContainer = document.getElementById('addTaskContainer');
 const addTaskBtn = document.getElementById('addTaskBtn');
 
 let isAddingTask = false;
-const tasks = [];
+const tasks = {};
 const completedTasks = [];
+let addTaskInput;
 
 addTaskBtn.addEventListener('click', handleAddTask);
 
@@ -175,13 +178,6 @@ function handleAddTask() {
 		const taskTitle = addTaskInput.value;
 
 		if (taskTitle.length > 0) {
-			tasks.push({
-				title: taskTitle,
-				description: 'No description',
-				createdAt: formatCurrentDate(),
-				hasTimer: false,
-				completedAt: '',
-			});
 			addTask(taskTitle);
 		}
 		addTaskContainer.removeChild(addTaskInput);
@@ -194,80 +190,37 @@ function handleAddTask() {
 const taskContainer = document.querySelector('.taskContainer');
 
 function renderTasks(tasks) {
-	for (task of tasks) {
-		addTask(task.title);
+	for (let task in tasks) {
+		addTask(tasks[task].title);
 	}
 }
 
 function addTask(title) {
-	// will be updated per kenban notes
-	const taskEl = document.createElement('div');
-	taskEl.classList.add('task');
-	taskEl.title = title;
-	const titleEl = document.createElement('p');
-	titleEl.textContent = title;
-	taskEl.append(titleEl);
-	taskEl.addEventListener('click', () => {
-		//
-		index = tasks.length - 1;
-		completedTasks.push({
-			title: tasks[index].title.replaceAll(',', ''),
-			description: tasks[index].description,
-			createdAt: tasks[index].createdAt,
-			completedAt: formatCurrentDate(),
-		});
-		tasks.splice(index, 1);
-		index--;
-		taskEl.remove();
-		if (index >= 0) {
-			firstTaskTimeElapsed = 0;
-			addFirstTaskTimer();
-		}
+	tasks[ID] = new Task({
+		idNew: ID,
+		titleNew: title,
+		createdAtNew: formatCurrentDate(),
+		profileNew: 'any',
+		isBreakTaskNew: barDetails.barStatus === 'pause' ? true : false,
+		taskElNew: document.createElement('div'),
+		childrenEl: {
+			titleEl: document.createElement('p'),
+			timerEl: document.createElement('p'),
+		},
+		completedTasks,
+		tasks,
+		taskContainer,
+		barDetails,
 	});
-	taskContainer.append(taskEl);
 
-	for (let taskNo in tasks) {
-		if (parseInt(taskNo) === 0) {
-			if (!tasks[taskNo].hasTimer) {
-				firstTaskTimeElapsed = 0;
-				addFirstTaskTimer();
-			}
-			tasks[taskNo].hasTimer = true;
-		}
-	}
+	tasks[ID].setTaskUp();
+	tasks[ID].addTaskListeners();
+
+	ID++;
 }
-
-function addFirstTaskTimer() {
-	// will be removed
-	const firstTaskEl = document.querySelector('.task');
-	if (firstTaskEl.childNodes.length < 2) {
-		console.log(firstTaskEl.childNodes);
-		currentlyTimedTask = document.createElement('p');
-		currentlyTimedTask.classList.add('firstTaskTimer');
-		clearInterval(firstTaskInterval);
-		firstTaskCountdown(currentlyTimedTask);
-		firstTaskEl.append(currentlyTimedTask);
-	}
-}
-
-function firstTaskCountdown(el) {
-	// will be removed
-	if (el) {
-		el.textContent = formatCountdownText(firstTaskTimeElapsed);
-		clearInterval(firstTaskInterval);
-		firstTaskInterval = setInterval(function () {
-			if (barStatus === 'active' && isCountingDown) {
-				firstTaskTimeElapsed++;
-				el.textContent = formatCountdownText(firstTaskTimeElapsed);
-			}
-		}, 1000);
-	}
-}
-
-// renderTasks(tasks);
-
-// ---------------- REMOVE TASKS ---------------- //
 
 ipc.on('addTask', () => {
 	handleAddTask();
 });
+
+window.tasks = tasks;
