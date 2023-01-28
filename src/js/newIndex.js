@@ -9,20 +9,14 @@ const skipPauseBtn = document.getElementById('skipPauseIcon');
 const bodyEl = document.querySelector('body');
 
 let ID = 0;
-// prototypes
-// function toggleCountdown() {}
-// function startCountdown() {}
-// function handleSkipBreak() {}
-// function addTask(title) {} // will remain
-// function handleAddTask() {}
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
 });
 
 // ------------------- TIMER -------------------- //
-const activeTime = 0.15 * 60;
-const pauseTime = 0.1 * 60;
+const activeTime = 0.1 * 60;
+const pauseTime = 0.05 * 60;
 
 let barDetails = {
 	barStatus: 'active',

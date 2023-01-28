@@ -98,6 +98,9 @@ export class Task {
 
 			// pause animation when timer is not counting
 			taskEl.style.animationPlayState = 'paused';
+
+			// helps avoiding a bug where the time passed during the break causes the task timer to blow up.
+			toggledFocusAt = 0;
 		};
 
 		this.destroySelfFromDOM = () => {

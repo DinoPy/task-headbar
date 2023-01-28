@@ -18,19 +18,24 @@ app.setAppUserModelId(app.name);
 let win;
 
 const createWindow = () => {
-	const screenWidth = screen.getPrimaryDisplay().workAreaSize.width;
+	const availableDisplays = screen.getAllDisplays();
+	const selectedScreen =
+		availableDisplays.length > 1 ? (process.platform === 'darwin' ? 1 : 0) : 0;
 	win = new BrowserWindow({
-		width: screenWidth,
-		height: 400,
+		x: availableDisplays[selectedScreen].workArea.x,
+		y: availableDisplays[selectedScreen].workArea.y,
+		width: availableDisplays[selectedScreen].workAreaSize.width,
+		width: availableDisplays[selectedScreen].workAreaSize.width,
+		height: 40,
 		minHeight: 40,
-		maxHeight: 400,
+		maxHeight: 40,
 		minWidth: 1280,
-		frame: true,
+		frame: false,
 		enableLargerThanScreen: false,
 		title: 'Task-yourself',
 		maximizable: false,
-		movable: true,
-		resizable: true,
+		movable: false,
+		// resizable: true,
 		minimizable: false,
 		icon: 'src/images/dino.ico',
 		webPreferences: {
@@ -42,7 +47,7 @@ const createWindow = () => {
 		},
 	});
 
-	win.setBounds({ x: 0, y: 0, width: screenWidth });
+	// win.setBounds({});
 	win.loadFile('src/index.html');
 	win.title = 'Task-yourself';
 
@@ -57,7 +62,8 @@ const createWindow = () => {
 			today.getMonth() + 1
 		}-${today.getFullYear()} ${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
 
-		if (args.length > 1) {
+		console.log(args);
+		if (args.length > 0) {
 			fs.writeFile(
 				`${homeDir}/Desktop/${todayString} tasks log.csv`,
 				tasksLog,
