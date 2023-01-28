@@ -75,7 +75,6 @@ export class Task {
 			// setting the timeElapsed to duration will allow to save how much time has passed if the task is toggled on and off.
 			// the value is devided by 1000 not to use MS
 			let taskTimeElapsed = Math.floor(duration / 1000);
-			console.log(taskTimeElapsed);
 			// settings up the interval
 			taskTimerInterval = setInterval(function () {
 				taskTimeElapsed++;
@@ -129,7 +128,7 @@ export class Task {
 				if (e.which === 1) {
 					if (isFocused) this.removeFocus();
 					else this.addFocus();
-				} else if (e.which === 2) {
+				} else if (e.which === 3) {
 					this.removeFocus();
 					this.addToCompletedTaskList();
 					this.destroySelfFromDOM();

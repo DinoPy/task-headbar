@@ -15,8 +15,8 @@ closeBtn.addEventListener('click', () => {
 });
 
 // ------------------- TIMER -------------------- //
-const activeTime = 0.1 * 60;
-const pauseTime = 0.05 * 60;
+const activeTime = 25 * 60;
+const pauseTime = 5 * 60;
 
 let barDetails = {
 	barStatus: 'active',
@@ -170,6 +170,7 @@ function handleAddTask() {
 		addTaskInput.focus();
 	} else {
 		const taskTitle = addTaskInput.value;
+		taskTitle.replaceAll('"', '').replaceAll(',', '');
 
 		if (taskTitle.length > 0) {
 			addTask(taskTitle);
