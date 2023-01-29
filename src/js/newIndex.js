@@ -170,7 +170,6 @@ function handleAddTask() {
 		addTaskInput.focus();
 	} else {
 		const taskTitle = addTaskInput.value;
-		taskTitle.replaceAll('"', '').replaceAll(',', '');
 
 		if (taskTitle.length > 0) {
 			addTask(taskTitle);
@@ -191,6 +190,7 @@ function renderTasks(tasks) {
 }
 
 function addTask(title) {
+	title = title.replaceAll(`"`, `'`).replaceAll(`,`, ``);
 	tasks[ID] = new Task({
 		idNew: ID,
 		titleNew: title,
