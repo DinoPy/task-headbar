@@ -27,8 +27,6 @@ let countdown = activeTime;
 let countdownInitialValue = countdown;
 let intervalId;
 
-let currentlyTimedTask;
-
 // update the value countdown based on established default active time
 countdownText.textContent = formatCountdownText(countdown);
 
@@ -37,8 +35,6 @@ playPauseBtn.addEventListener('click', toggleCountdown);
 skipPauseBtn.addEventListener('click', handleSkipBreak);
 
 // ---------------- UTILITY FUNCTIONS ------------------- //
-
-// formats the text
 
 // starts the countdown
 
@@ -183,12 +179,6 @@ function handleAddTask() {
 // --------------- RENDER TASKS ------------------ //
 const taskContainer = document.querySelector('.taskContainer');
 
-function renderTasks(tasks) {
-	for (let task in tasks) {
-		addTask(tasks[task].title);
-	}
-}
-
 function addTask(title) {
 	title = title.replaceAll(`"`, `'`).replaceAll(`,`, ``);
 	tasks[ID] = new Task({
@@ -196,7 +186,6 @@ function addTask(title) {
 		titleNew: title,
 		createdAtNew: formatCurrentDate(),
 		profileNew: 'any',
-		isBreakTaskNew: barDetails.barStatus === 'pause' ? true : false,
 		taskElNew: document.createElement('div'),
 		childrenEl: {
 			titleEl: document.createElement('p'),

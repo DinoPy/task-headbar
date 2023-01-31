@@ -22,7 +22,6 @@ export class Task {
 		titleNew,
 		createdAtNew,
 		profileNew,
-		isBreakTaskNew,
 		taskElNew,
 		childrenEl,
 		completedTasks,
@@ -36,7 +35,6 @@ export class Task {
 		let taskEl = taskElNew;
 		let children = childrenEl;
 		const profile = profileNew;
-		const isBreakTask = isBreakTaskNew;
 		let isFocused = false;
 		let taskTimerInterval = null;
 		let description = 'no description';
@@ -113,13 +111,10 @@ export class Task {
 				description,
 				createdAt,
 				completedAt: this.formatCurrentDate(),
-				duration: this.formatCountdownText(Math.ceil(duration / 1000)),
+				duration: this.formatTaskDuration(Math.ceil(duration / 1000)),
 				profile,
-				isBreakTask,
 				category,
 			};
-
-			console.log(completedTasks);
 		};
 
 		this.addTaskListeners = () => {
@@ -128,7 +123,7 @@ export class Task {
 				if (e.which === 1) {
 					if (isFocused) this.removeFocus();
 					else this.addFocus();
-				} else if (e.which === 3) {
+				} else if (e.which === 2) {
 					this.removeFocus();
 					this.addToCompletedTaskList();
 					this.destroySelfFromDOM();
@@ -170,6 +165,16 @@ export class Task {
 			return `${hours > 0 ? (hours < 10 ? '0' + hours : hours) + ' : ' : ''} ${
 				minutes < 10 ? '0' + minutes : minutes
 			} : ${seconds < 10 ? '0' + seconds : seconds}`;
+		};
+
+		this.formatTaskDuration = (time) => {
+			// similar to formatcountdowntext however it exports into an excel duration format
+			let minutes = Math.floor((time / 60) % 60);
+			let hours = Math.floor(time / 60 / 60);
+			let seconds = time % 60;
+			return `${hours < 10 ? '0' + hours : hours}:${
+				minutes < 10 ? '0' + minutes : minutes
+			}:${seconds < 10 ? '0' + seconds : seconds}`;
 		};
 
 		this.formatCurrentDate = () => {

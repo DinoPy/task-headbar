@@ -16,11 +16,13 @@ app.setName('Task yourself');
 app.setAppUserModelId(app.name);
 
 let win;
+function exportCsv(completedTasks) {}
+function getCurrentDayFormated() {}
 
 const createWindow = () => {
 	const availableDisplays = screen.getAllDisplays();
 	const selectedScreen =
-		availableDisplays.length > 1 ? (process.platform === 'darwin' ? 1 : 0) : 0;
+		availableDisplays.length > 1 ? (process.platform !== 'darwin' ? 1 : 0) : 0;
 	win = new BrowserWindow({
 		x: availableDisplays[selectedScreen].workArea.x,
 		y: availableDisplays[selectedScreen].workArea.y,
@@ -47,31 +49,11 @@ const createWindow = () => {
 		},
 	});
 
-	// win.setBounds({});
 	win.loadFile('src/index.html');
 	win.title = 'Task-yourself';
 
 	ipc.on('closeApp', (e, args) => {
-		tasksLog = 'title,description,createdAt,completedAt,duration\n';
-		for (task of args) {
-			currentTask = `${task.title},${task.description},${task.createdAt},${task.completedAt},to do\n`;
-			tasksLog += currentTask;
-		}
-		const today = new Date();
-		todayString = `${today.getDate()}-${
-			today.getMonth() + 1
-		}-${today.getFullYear()} ${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
-
-		console.log(args);
-		if (args.length > 0) {
-			fs.writeFile(
-				`${homeDir}/Desktop/${todayString} tasks log.csv`,
-				tasksLog,
-				(e) => {
-					console.log(e);
-				}
-			);
-		}
+		exportCsv(args);
 		win.close();
 	});
 
@@ -96,8 +78,8 @@ const createWindow = () => {
 app
 	.whenReady()
 	.then(() => {
-		// globalShortcut.register('CommandOrControl+R', () => {});
-		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
+		globalShortcut.register('CommandOrControl+R', () => {});
+		globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
 			win.show();
 			win.webContents.send('addTask');
@@ -111,3 +93,65 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
 	if (BrowserWindow.getAllwindows().length === 0) createWindow();
 });
+
+function exportCsv(completedTasks) {
+	// return if the list has no tasks
+	if (completedTasks.length < 1) return;
+
+	// get the list of header items
+	const headers = Object.keys(completedTasks[0]);
+
+	// generate a string of those lists that's separated by , and \n at the end
+	const rowHeader = headers.reduce(
+		(acc, cv, ci) => acc + cv + (ci !== headers.length - 1 ? ',' : '\n'),
+		''
+	);
+
+	// assign the final csvString the first header row
+	csvString = rowHeader;
+
+	// create current task
+	let currentTask = '';
+
+	// loop over each task
+	for (let i = 0; i < completedTasks.length; i++) {
+		// if something else but the task object is received, return.
+		if (typeof completedTasks[i] !== 'object') continue;
+
+		// go over the index of each property in the object using the header which has each property listed
+		for (let taskProperty in headers) {
+			// get the current title
+			const currentTitle = headers[taskProperty];
+
+			// add to the current task the value at ith task and current title
+			currentTask +=
+				completedTasks[i][currentTitle] +
+				(taskProperty < headers.length - 1 ? ',' : '\n');
+		}
+
+		// add the final value to the current Task
+		csvString += currentTask;
+
+		// reset current task
+		currentTask = '';
+	}
+
+	// save the CSV
+	fs.writeFile(
+		`${homeDir}/Desktop/${getCurrentDayFormated()} tasks log.csv`,
+		csvString,
+		(e) => {
+			console.log(e);
+		}
+	);
+}
+
+function getCurrentDayFormated() {
+	const today = new Date();
+
+	todayString = `${today.getDate()}-${
+		today.getMonth() + 1
+	}-${today.getFullYear()} ${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
+
+	return todayString;
+}

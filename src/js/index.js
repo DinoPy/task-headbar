@@ -10,15 +10,6 @@ const bodyEl = document.querySelector('body');
 
 let ID = 0;
 // prototypes
-function formatCountdownText() {} // add hours // will be copied to class
-function toggleCountdown() {}
-function startCountdown() {}
-function handleSkipBreak() {}
-function addTask(title) {} // will remain
-function addFirstTaskTimer() {}
-function handleAddTask() {}
-function renderTasks(tasks) {}
-function formatCurrentDate() {} // will be moved to class
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
@@ -157,6 +148,7 @@ const completedTasks = [];
 
 addTaskBtn.addEventListener('click', handleAddTask);
 
+let addTaskInput;
 function handleAddTask() {
 	if (isAddingTask === false) {
 		addTaskBtn.src = 'images/done.svg';
@@ -209,7 +201,7 @@ function addTask(title) {
 	taskEl.append(titleEl);
 	taskEl.addEventListener('click', () => {
 		//
-		index = tasks.length - 1;
+		let index = tasks.length - 1;
 		completedTasks.push({
 			title: tasks[index].title.replaceAll(',', ''),
 			description: tasks[index].description,
@@ -241,7 +233,6 @@ function addFirstTaskTimer() {
 	// will be removed
 	const firstTaskEl = document.querySelector('.task');
 	if (firstTaskEl.childNodes.length < 2) {
-		console.log(firstTaskEl.childNodes);
 		currentlyTimedTask = document.createElement('p');
 		currentlyTimedTask.classList.add('firstTaskTimer');
 		clearInterval(firstTaskInterval);
