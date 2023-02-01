@@ -18,18 +18,22 @@ app.setName('Task yourself');
 app.setAppUserModelId(app.name);
 
 let win;
+let taskWindow;
+let availableDisplays;
+
 function exportCsv(completedTasks) {}
 function getCurrentDayFormated() {}
+function createContextMenu() {}
+function createTaskContextMenu() {}
 
 const createWindow = () => {
-	const availableDisplays = screen.getAllDisplays();
-	const selectedScreen =
-		availableDisplays.length > 1 ? (process.platform !== 'darwin' ? 1 : 0) : 0;
+	availableDisplays = screen.getAllDisplays();
+	const selectedScreen = availableDisplays[0];
 	win = new BrowserWindow({
-		x: availableDisplays[selectedScreen].workArea.x,
-		y: availableDisplays[selectedScreen].workArea.y,
-		width: availableDisplays[selectedScreen].workAreaSize.width,
-		width: availableDisplays[selectedScreen].workAreaSize.width,
+		x: selectedScreen.workArea.x,
+		y: selectedScreen.workArea.y,
+		width: selectedScreen.workAreaSize.width,
+		width: selectedScreen.workAreaSize.width,
 		height: 40,
 		minHeight: 40,
 		maxHeight: 40,
@@ -68,7 +72,6 @@ const createWindow = () => {
 			sound: path.join(__dirname, 'src/sounds/smack.ogg'),
 			timeoutType: 'never',
 		}).show();
-		console.log(args);
 		const sound =
 			args === 'Start pause.' ? 'Oh you want a break' : 'Get Back to Work';
 		player.play(`src/sounds/${sound}.mp3`, (err) => {
@@ -76,28 +79,20 @@ const createWindow = () => {
 		});
 	});
 
-	ipc.on('show-context-menu', (e, args) => {
-		console.log(args);
-		const ctxMenu = new Menu();
+	ipc.on('show-task-context-menu', (e, args) => {
+		createTaskContextMenu(args);
+	});
 
-		ctxMenu.append(
-			new MenuItem({
-				label: 'y',
-				click: () => {
-					console.log(args);
-				},
-			})
-		);
-
-		ctxMenu.popup(win);
+	ipc.on('show-general-context-menu', () => {
+		createContextMenu();
 	});
 };
 
 app
 	.whenReady()
 	.then(() => {
-		globalShortcut.register('CommandOrControl+R', () => {});
-		globalShortcut.register('CommandOrControl+Shift+R', () => {});
+		// globalShortcut.register('CommandOrControl+R', () => {});
+		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
 			win.show();
 			win.webContents.send('addTask');
@@ -175,3 +170,91 @@ function getCurrentDayFormated() {
 
 	return todayString;
 }
+
+function createContextMenu() {
+	const menu = new Menu();
+
+	const submenus = availableDisplays.map((d, i) => {
+		return {
+			label: `Screen ${i}`,
+			click: () => {
+				win.setBounds({
+					x: d.bounds.x,
+					y: d.bounds.y,
+					height: 40,
+					width: d.bounds.width,
+				});
+			},
+		};
+	});
+
+	menu.append(
+		new MenuItem({
+			label: 'Select screen',
+			submenu: submenus,
+		})
+	);
+
+	menu.popup(win, 0, 0);
+}
+
+function createTaskContextMenu(args) {
+	const ctxMenu = new Menu();
+
+	ctxMenu.append(
+		new MenuItem({
+			label: 'Edit',
+			click: () => {
+				createPopUpWindow(args);
+			},
+		})
+	);
+
+	ctxMenu.popup(win, 0, 0);
+}
+
+function createPopUpWindow(props) {
+	taskWindow = new BrowserWindow({
+		width: 400,
+		height: 250,
+		maxHeight: 250,
+		minHeight: 250,
+		minimizable: false,
+		resizable: false,
+		movable: false,
+		parent: win,
+		modal: true,
+		alwaysOnTop: true,
+		show: false,
+		frame: false,
+		transparent: true,
+
+		webPreferences: {
+			webgl: true,
+			nodeIntegration: true,
+			contextIsolation: false,
+			devTools: true,
+		},
+	});
+	taskWindow.setBackgroundColor = '#1b1d23';
+
+	taskWindow.loadFile('src/html/child.html');
+
+	taskWindow.webContents.on('did-finish-load', () => {
+		taskWindow.webContents.send('data-from-parent', props);
+	});
+
+	taskWindow.on('ready-to-show', () => {
+		taskWindow.show();
+	});
+
+	taskWindow.on('close', () => {
+		taskWindow = null;
+	});
+}
+
+ipc.on('msg-from-child-to-parent', (e, data) => {
+	// win.webContents.send('msg-redirected-to-parent', data);
+	if (taskWindow) taskWindow.close();
+	console.log(data);
+});

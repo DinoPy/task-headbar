@@ -133,6 +133,7 @@ export class Task {
 					delete tasks[id];
 				} else if (e.which === 3) {
 					this.openCtxMenu();
+					e.stopPropagation();
 				}
 			});
 		};
@@ -160,7 +161,7 @@ export class Task {
 		};
 
 		this.openCtxMenu = () => {
-			ipc.send('show-context-menu', { title });
+			ipc.send('show-task-context-menu', { title, description, category });
 		};
 
 		this.formatCountdownText = (time) => {

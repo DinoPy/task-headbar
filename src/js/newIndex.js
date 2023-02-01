@@ -14,6 +14,14 @@ closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
 });
 
+ipc.on('msg-redirected-to-parent', (e, data) => {
+	console.log(data);
+});
+
+bodyEl.addEventListener('mouseup', (e) => {
+	if (e.button === 2) ipc.send('show-general-context-menu');
+});
+
 // ------------------- TIMER -------------------- //
 const activeTime = 25 * 60;
 const pauseTime = 5 * 60;
