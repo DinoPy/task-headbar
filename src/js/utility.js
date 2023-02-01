@@ -1,3 +1,6 @@
+const { ipcRenderer } = require('electron');
+const ipc = ipcRenderer;
+
 export function formatCountdownText(time) {
 	let minutes = Math.floor((time / 60) % 60);
 	let hours = Math.floor(time / 60 / 60);
@@ -128,6 +131,8 @@ export class Task {
 					this.addToCompletedTaskList();
 					this.destroySelfFromDOM();
 					delete tasks[id];
+				} else if (e.which === 3) {
+					this.openCtxMenu();
 				}
 			});
 		};
@@ -152,6 +157,10 @@ export class Task {
 			this.setTaskElUp();
 			this.setChildrenElUp();
 			taskContainer.append(taskEl);
+		};
+
+		this.openCtxMenu = () => {
+			ipc.send('show-context-menu', { title });
 		};
 
 		this.formatCountdownText = (time) => {

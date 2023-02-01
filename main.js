@@ -5,6 +5,8 @@ const {
 	screen,
 	globalShortcut,
 	Notification,
+	Menu,
+	MenuItem,
 } = require('electron');
 const path = require('path');
 const ipc = ipcMain;
@@ -73,6 +75,22 @@ const createWindow = () => {
 			console.log(err);
 		});
 	});
+
+	ipc.on('show-context-menu', (e, args) => {
+		console.log(args);
+		const ctxMenu = new Menu();
+
+		ctxMenu.append(
+			new MenuItem({
+				label: 'y',
+				click: () => {
+					console.log(args);
+				},
+			})
+		);
+
+		ctxMenu.popup(win);
+	});
 };
 
 app
@@ -85,7 +103,9 @@ app
 			win.webContents.send('addTask');
 		});
 	})
-	.then(createWindow);
+	.then(() => {
+		createWindow();
+	});
 
 app.on('window-all-closed', () => {
 	app.quit();
