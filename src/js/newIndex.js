@@ -8,6 +8,7 @@ const playPauseBtn = document.getElementById('playPauseIcon');
 const skipPauseBtn = document.getElementById('skipPauseIcon');
 const bodyEl = document.querySelector('body');
 
+const tasks = {};
 let ID = 0;
 
 closeBtn.addEventListener('click', () => {
@@ -16,6 +17,13 @@ closeBtn.addEventListener('click', () => {
 
 ipc.on('msg-redirected-to-parent', (e, data) => {
 	console.log(data);
+	if (typeof data.id !== 'number') return;
+
+	tasks[data.id].updateCategory(data.category);
+	tasks[data.id].updateDescription(data.description);
+	tasks[data.id].updateTitle(data.title);
+
+	console.log(tasks[data.id]);
 });
 
 bodyEl.addEventListener('mouseup', (e) => {
@@ -152,7 +160,6 @@ const addTaskContainer = document.getElementById('addTaskContainer');
 const addTaskBtn = document.getElementById('addTaskBtn');
 
 let isAddingTask = false;
-const tasks = {};
 const completedTasks = [];
 let addTaskInput;
 

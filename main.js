@@ -91,6 +91,7 @@ const createWindow = () => {
 app
 	.whenReady()
 	.then(() => {
+		// setting up global shortcuts.
 		// globalShortcut.register('CommandOrControl+R', () => {});
 		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
@@ -102,12 +103,14 @@ app
 		createWindow();
 	});
 
+// if all windows are close then quit app.
 app.on('window-all-closed', () => {
 	app.quit();
 });
-app.on('activate', () => {
-	if (BrowserWindow.getAllwindows().length === 0) createWindow();
-});
+// app.on('activate', () => {
+// 	// mac specific option that has no effect atm as the windows are closed fully on close.
+// 	if (BrowserWindow.getAllwindows().length === 0) createWindow();
+// });
 
 function exportCsv(completedTasks) {
 	// return if the list has no tasks
@@ -176,7 +179,7 @@ function createContextMenu() {
 
 	const submenus = availableDisplays.map((d, i) => {
 		return {
-			label: `Screen ${i}`,
+			label: `Screen ${i} - Top`,
 			click: () => {
 				win.setBounds({
 					x: d.bounds.x,
@@ -187,6 +190,22 @@ function createContextMenu() {
 			},
 		};
 	});
+
+	submenus.push(
+		...availableDisplays.map((d, i) => {
+			return {
+				label: `Screen ${i} - Bottom`,
+				click: () => {
+					win.setBounds({
+						x: d.bounds.x,
+						y: d.bounds.y + d.bounds.height - 40,
+						height: 40,
+						width: d.bounds.width,
+					});
+				},
+			};
+		})
+	);
 
 	menu.append(
 		new MenuItem({
@@ -214,11 +233,10 @@ function createTaskContextMenu(args) {
 }
 
 function createPopUpWindow(props) {
+	// properties of the browser window.
 	taskWindow = new BrowserWindow({
 		width: 400,
-		height: 250,
-		maxHeight: 250,
-		minHeight: 250,
+		minHeight: 200,
 		minimizable: false,
 		resizable: false,
 		movable: false,
@@ -240,21 +258,36 @@ function createPopUpWindow(props) {
 
 	taskWindow.loadFile('src/html/child.html');
 
+	taskWindow.webContents.on('dom-ready', async () => {
+		const height = await taskWindow.webContents.executeJavaScript(
+			'document.body.offsetHeight'
+		);
+
+		taskWindow.setSize(400, height + 27);
+		taskWindow.show();
+	});
+
+	// when the window is loaded we send the data from the parent props received via the context menu
+	// and populate the page with the intended values.
 	taskWindow.webContents.on('did-finish-load', () => {
 		taskWindow.webContents.send('data-from-parent', props);
 	});
 
-	taskWindow.on('ready-to-show', () => {
-		taskWindow.show();
-	});
+	// shows the window when ready event is triggered.
+	taskWindow.on('ready-to-show', () => {});
 
+	// removes from memory the value of the taskWindow that was closed.
 	taskWindow.on('close', () => {
 		taskWindow = null;
 	});
 }
 
+// ensures the communication between the children windows and the main task window.
 ipc.on('msg-from-child-to-parent', (e, data) => {
-	// win.webContents.send('msg-redirected-to-parent', data);
+	win.webContents.send('msg-redirected-to-parent', data);
 	if (taskWindow) taskWindow.close();
-	console.log(data);
+});
+
+ipc.on('close-children-window', () => {
+	if (taskWindow) taskWindow.close();
 });

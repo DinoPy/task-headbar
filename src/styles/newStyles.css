@@ -16,7 +16,6 @@ html {
 }
 
 body {
-	padding: 10px;
 	margin: 0;
 	height: 100%;
 	font-family: 'Nunito', sans-serif;
@@ -139,7 +138,7 @@ body {
 	display: flex;
 	align-items: center;
 
-	height: 60%;
+	height: 70%;
 	border-left: 1px solid #343b38;
 	border-right: 1px solid #343b38;
 	padding: 0 10px 0 5px;

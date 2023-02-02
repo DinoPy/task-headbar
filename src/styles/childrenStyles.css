@@ -10,11 +10,12 @@ p {
 
 body {
 	margin: 0;
-	height: 250px;
+	height: fit-content;
 	font-family: 'Nunito', sans-serif;
 
 	color: #949aa7;
 	background-color: transparent;
+	overflow: hidden;
 
 	/* display: flex;
 	flex-direction: column;
@@ -22,14 +23,15 @@ body {
 }
 
 input,
-textarea {
+textarea,
+select {
+	margin: 5px 0;
 	background-color: #292c35;
 	color: #949aa7;
 	border: none;
 	outline: #949aa7;
-	border-radius: 1px;
-	padding: 2px 5px;
-	margin-left: 5px;
+	border-radius: 5px;
+	padding: 5px 10px;
 	font-family: 'Nunito', sans-serif;
 	width: 100%;
 	resize: none;
@@ -40,9 +42,16 @@ main {
 	background-color: #1b1d23;
 	height: 100%;
 	width: 100%;
-	overflow: hidden;
 	border: 1px solid #343b38;
-	border-radius: 15px;
+	border-radius: 10px;
+
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.titleLabel {
+	margin-top: 25px;
 }
 
 .button {
@@ -68,4 +77,50 @@ main {
 
 .button:active {
 	background-color: #4f9eee6c;
+}
+
+.modalOptionsContainer {
+	display: flex;
+	gap: 1em;
+	justify-content: center;
+	align-items: center;
+}
+
+.btn {
+	font-size: 18px;
+	border-radius: 2px;
+	padding: 0.3em 1.5em;
+	margin: 10px;
+	cursor: pointer;
+	transition: background-color 0.2s ease-out;
+}
+
+.submitBtn {
+	color: #252525;
+	border: none;
+	background-color: #0566cf;
+}
+
+.submitBtn:hover {
+	background-color: hsl(211, 68%, 46%);
+}
+
+.submitBtn:active {
+	background-color: #4088d5;
+}
+
+.cancelBtn {
+	background-color: transparent;
+	border: 1px solid gray;
+	color: white;
+}
+
+.cancelBtn:hover {
+	background-color: #949aa7;
+}
+
+.newCategoryDialog {
+	background-color: #1b1d23;
+	border-radius: 5px;
+	border: 1px solid #343b38;
 }

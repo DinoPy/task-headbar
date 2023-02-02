@@ -42,15 +42,21 @@ export class Task {
 		let taskTimerInterval = null;
 		let description = 'no description';
 		let duration = 0;
-		let category = '';
+		let category = 'none';
 		let toggledFocusAt = 0;
 
 		this.updateTitle = (newTitle) => {
 			title = newTitle;
+			taskEl.title = newTitle;
+			children.titleEl.textContent = newTitle;
 		};
 
 		this.updateDescription = (newDescription) => {
 			description = newDescription;
+		};
+
+		this.updateCategory = (newCategory) => {
+			category = newCategory;
 		};
 
 		this.getIsFocusedStatus = () => {
@@ -161,7 +167,7 @@ export class Task {
 		};
 
 		this.openCtxMenu = () => {
-			ipc.send('show-task-context-menu', { title, description, category });
+			ipc.send('show-task-context-menu', { id, title, description, category });
 		};
 
 		this.formatCountdownText = (time) => {
