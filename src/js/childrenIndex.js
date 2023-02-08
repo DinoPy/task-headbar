@@ -15,8 +15,11 @@ const titleInput = document.getElementById('title');
 const categorySelect = document.getElementById('category');
 const descriptionInput = document.getElementById('description');
 
-const categories = JSON.parse(localStorage.getItem('categories'));
-localStorage.setItem('categories', JSON.stringify(['none']));
+let categories = JSON.parse(localStorage.getItem('categories'));
+if (!categories) {
+	localStorage.setItem('categories', JSON.stringify(['none']));
+	categories = ['none'];
+}
 
 ipc.on('data-from-parent', (e, data) => {
 	ID = data.id;
@@ -24,13 +27,12 @@ ipc.on('data-from-parent', (e, data) => {
 	descriptionInput.value = data.description;
 
 	category = data.category;
-	console.log(data.category);
 	populateCategoryOptions();
 	categorySelect.value = data.category;
 });
 
 const populateCategoryOptions = () => {
-	console.log(category);
+	console.log(categories);
 	if (!categories.includes(category)) {
 		categories.push(category);
 	}
