@@ -12,7 +12,7 @@ const path = require('path');
 const ipc = ipcMain;
 const fs = require('fs');
 const homeDir = require('os').homedir();
-const player = require('play-sound')((opts = {}));
+const player = require('play-sound')();
 
 app.setName('Task yourself');
 app.setAppUserModelId(app.name);
@@ -25,6 +25,7 @@ function exportCsv(completedTasks) {}
 function getCurrentDayFormated() {}
 function createContextMenu() {}
 function createTaskContextMenu() {}
+function deleteTask(props) {}
 
 const createWindow = () => {
 	availableDisplays = screen.getAllDisplays();
@@ -69,14 +70,13 @@ const createWindow = () => {
 			body: args,
 			silent: true,
 			icon: 'src/images/dino.ico',
-			sound: path.join(__dirname, 'src/sounds/smack.ogg'),
 			timeoutType: 'never',
 		}).show();
-		const sound =
-			args === 'Start pause.' ? 'Oh you want a break' : 'Get Back to Work';
-		player.play(`src/sounds/${sound}.mp3`, (err) => {
-			console.log(err);
-		});
+		const sound = args === 'Start pause.' ? 'break' : 'work';
+		if (process.platform !== 'linux')
+			player.play(`src/sounds/${sound}.mp3`, (err) => {
+				console.log(err);
+			});
 	});
 
 	ipc.on('show-task-context-menu', (e, args) => {
@@ -112,9 +112,13 @@ app.on('window-all-closed', () => {
 // 	if (BrowserWindow.getAllwindows().length === 0) createWindow();
 // });
 
-function exportCsv(completedTasks) {
+async function exportCsv(completedTasks) {
 	// return if the list has no tasks
 	if (completedTasks.length < 1) return;
+	console.log(completedTasks);
+
+	// if something else but the task object is received, return.
+	completedTasks = completedTasks.filter((i) => typeof i === 'object');
 
 	// get the list of header items
 	const headers = Object.keys(completedTasks[0]);
@@ -133,9 +137,6 @@ function exportCsv(completedTasks) {
 
 	// loop over each task
 	for (let i = 0; i < completedTasks.length; i++) {
-		// if something else but the task object is received, return.
-		if (typeof completedTasks[i] !== 'object') continue;
-
 		// go over the index of each property in the object using the header which has each property listed
 		for (let taskProperty in headers) {
 			// get the current title
@@ -154,9 +155,13 @@ function exportCsv(completedTasks) {
 		currentTask = '';
 	}
 
+	await fs.promises.mkdir(`${homeDir}/Documents/Tasks/Logs`, {
+		recursive: true,
+	});
+
 	// save the CSV
 	fs.writeFile(
-		`${homeDir}/Desktop/${getCurrentDayFormated()} tasks log.csv`,
+		`${homeDir}/Documents/Tasks/Logs/${getCurrentDayFormated()} tasks log.csv`,
 		csvString,
 		(e) => {
 			console.log(e);
@@ -229,6 +234,15 @@ function createTaskContextMenu(args) {
 		})
 	);
 
+	ctxMenu.append(
+		new MenuItem({
+			label: 'Delete',
+			click: () => {
+				deleteTask(args);
+			},
+		})
+	);
+
 	ctxMenu.popup(win, 0, 0);
 }
 
@@ -280,6 +294,10 @@ function createPopUpWindow(props) {
 	taskWindow.on('close', () => {
 		taskWindow = null;
 	});
+}
+
+function deleteTask(props) {
+	win.webContents.send('deleteTask', props);
 }
 
 // ensures the communication between the children windows and the main task window.

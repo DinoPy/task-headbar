@@ -7,6 +7,7 @@ const countdownText = document.getElementById('countdown');
 const playPauseBtn = document.getElementById('playPauseIcon');
 const skipPauseBtn = document.getElementById('skipPauseIcon');
 const bodyEl = document.querySelector('body');
+const noActiveTaskParagraph = document.querySelector('.noActiveTaskWarning');
 
 const tasks = {};
 let ID = 0;
@@ -22,8 +23,13 @@ ipc.on('msg-redirected-to-parent', (e, data) => {
 	tasks[data.id].updateCategory(data.category);
 	tasks[data.id].updateDescription(data.description);
 	tasks[data.id].updateTitle(data.title);
+});
 
-	console.log(tasks[data.id]);
+ipc.on('deleteTask', (e, data) => {
+	tasks[data.id].removeFocus();
+	tasks[data.id].destroySelfFromDOM();
+	delete tasks[data.id];
+	console.log(completedTasks);
 });
 
 bodyEl.addEventListener('mouseup', (e) => {
@@ -210,6 +216,7 @@ function addTask(title) {
 		tasks,
 		taskContainer,
 		barDetails,
+		noActiveTaskWarning: noActiveTaskParagraph,
 	});
 
 	tasks[ID].setTaskUp();
@@ -223,3 +230,24 @@ ipc.on('addTask', () => {
 });
 
 window.tasks = tasks;
+
+// ------------ NO ACTIVE TASK WARNING ---------------//
+
+setInterval(() => {
+	const taskList = Object.keys(tasks);
+	const activeTasks = taskList.filter((i) => tasks[i].getIsFocusedStatus());
+	console.log(activeTasks.length);
+	if (
+		activeTasks.length === 0 &&
+		barDetails.barStatus === 'active' &&
+		barDetails.isCountingDown
+	) {
+		let timeout;
+		clearTimeout(timeout);
+		bodyEl.classList.add('noActiveTaskBodyWarning');
+		noActiveTaskParagraph.style.display = 'block';
+		timeout = setTimeout(() => {
+			bodyEl.classList.remove('noActiveTaskBodyWarning');
+		}, 1000);
+	}
+}, 2500);

@@ -73,7 +73,7 @@ const listenForNewCat = () => {
 	});
 
 	addNewCategoryBtn.addEventListener('click', (e) => {
-		const value = addCategoryInput.value;
+		const value = addCategoryInput.value.replaceAll(',', '');
 		if (value.length < 1) {
 			categorySelect.value = category;
 			dialogEl.close();
@@ -104,9 +104,9 @@ closeBtn.addEventListener('click', () => {
 
 submitBtn.addEventListener('click', () => {
 	ipc.send('msg-from-child-to-parent', {
-		title: titleInput.value,
-		category: categorySelect.value,
-		description: descriptionInput.value,
+		title: titleInput.value.replaceAll(',', ''),
+		category: categorySelect.value.replaceAll(',', ''),
+		description: descriptionInput.value.replaceAll(',', ''),
 		id: ID,
 	});
 });

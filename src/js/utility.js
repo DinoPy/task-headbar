@@ -31,6 +31,7 @@ export class Task {
 		tasks,
 		taskContainer,
 		barDetails,
+		noActiveTaskWarning,
 	}) {
 		const id = idNew;
 		let title = titleNew;
@@ -69,6 +70,7 @@ export class Task {
 				this.startTimer();
 			taskEl.classList.add('activeTask');
 			children.timerEl.style.color = '#1b1d23';
+			noActiveTaskWarning.style.display = 'none';
 		};
 
 		this.removeFocus = () => {
@@ -115,7 +117,7 @@ export class Task {
 		};
 
 		this.addToCompletedTaskList = () => {
-			completedTasks[id] = {
+			completedTasks.push({
 				title,
 				description,
 				createdAt,
@@ -123,7 +125,9 @@ export class Task {
 				duration: this.formatTaskDuration(Math.ceil(duration / 1000)),
 				profile,
 				category,
-			};
+			});
+
+			console.log(completedTasks);
 		};
 
 		this.addTaskListeners = () => {

@@ -24,6 +24,7 @@ body {
 
 	display: flex;
 	justify-content: space-between;
+	transition: background-color 250ms ease-in-out;
 }
 
 .task {
@@ -33,8 +34,9 @@ body {
 	border-radius: 2px;
 
 	display: flex;
+	min-width: 60px;
 	width: 200px;
-	flex: 0 1 200px;
+
 	align-items: center;
 	cursor: pointer;
 
@@ -168,4 +170,24 @@ body {
 
 .skipPauseIcon {
 	display: none;
+}
+
+.noActiveTaskWarning {
+	display: none;
+	color: yellowgreen;
+	font-weight: 900;
+	font-size: 24px;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translateX(-50%) translateY(-50%);
+	text-shadow: 0px 0px 1px white, 0px 0px 10px #252525;
+}
+
+p.noActiveTaskWarning:hover {
+	display: none;
+}
+
+.noActiveTaskBodyWarning {
+	background-color: rgb(228, 99, 44);
 }
