@@ -70,7 +70,7 @@ export class Task {
 				this.startTimer();
 			taskEl.classList.add('activeTask');
 			children.timerEl.style.color = '#1b1d23';
-			noActiveTaskWarning.style.display = 'none';
+			noActiveTaskWarning.classList.add('invisible');
 		};
 
 		this.removeFocus = () => {

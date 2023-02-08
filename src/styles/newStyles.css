@@ -173,7 +173,6 @@ body {
 }
 
 .noActiveTaskWarning {
-	display: none;
 	color: yellowgreen;
 	font-weight: 900;
 	font-size: 24px;
@@ -184,10 +183,14 @@ body {
 	text-shadow: 0px 0px 1px white, 0px 0px 10px #252525;
 }
 
-p.noActiveTaskWarning:hover {
+.invisible {
 	display: none;
 }
 
 .noActiveTaskBodyWarning {
 	background-color: rgb(228, 99, 44);
+}
+
+body:hover .noActiveTaskWarning {
+	display: none;
 }

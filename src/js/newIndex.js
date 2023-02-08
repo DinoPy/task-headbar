@@ -245,7 +245,7 @@ setInterval(() => {
 		let timeout;
 		clearTimeout(timeout);
 		bodyEl.classList.add('noActiveTaskBodyWarning');
-		noActiveTaskParagraph.style.display = 'block';
+		noActiveTaskParagraph.classList.remove('invisible');
 		timeout = setTimeout(() => {
 			bodyEl.classList.remove('noActiveTaskBodyWarning');
 		}, 1000);
