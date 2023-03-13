@@ -11,11 +11,12 @@ const noActiveTaskParagraph = document.querySelector('.noActiveTaskWarning');
 
 const tasks = {};
 let ID = 0;
-let isTimerRunning = false;
+let isTimerRunning = true;
 let lastCategorySelected = 'none';
 
 ipc.on('data-from-main', (e, data) => {
 	isTimerRunning = data.isTimerRunning;
+	console.log(isTimerRunning);
 });
 
 ipc.on('toggle-countdown-timer', (e, data) => {

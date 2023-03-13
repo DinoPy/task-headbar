@@ -21,7 +21,6 @@ let SETTINGS;
 let win;
 let taskWindow;
 let availableDisplays;
-let isTimerRunning = true;
 let CATEGORIES = [];
 
 function exportCsv(completedTasks) {}
@@ -64,7 +63,7 @@ const createWindow = () => {
 	});
 
 	win.loadFile('src/index.html');
-	win.title = 'Task-yourself';
+	win.title = 'Task bar';
 
 	ipc.on('closeApp', (e, args) => {
 		exportCsv(args);
@@ -105,7 +104,7 @@ const createWindow = () => {
 	// once the page is loaded we send some variables sourcing from settings
 	win.webContents.on('did-finish-load', () => {
 		win.webContents.send('data-from-main', {
-			isTimerRunning,
+			isTimerRunning: SETTINGS.isTimerRunning,
 			categories: CATEGORIES,
 		});
 	});
@@ -248,13 +247,14 @@ function createContextMenu() {
 		new MenuItem({
 			label: 'Toggle timer',
 			toolTip: `Timer is currently ${
-				isTimerRunning ? 'running' : 'deactivated'
+				SETTINGS.isTimerRunning ? 'running' : 'deactivated'
 			}`,
 			click: () => {
-				isTimerRunning = !isTimerRunning;
-				SETTINGS.isTimerRunning = isTimerRunning;
+				SETTINGS.isTimerRunning = !SETTINGS.isTimerRunning;
 				updateSettings();
-				win.webContents.send('toggle-countdown-timer', { isTimerRunning });
+				win.webContents.send('toggle-countdown-timer', {
+					isTimerRunning: SETTINGS.isTimerRunning,
+				});
 			},
 		})
 	);
