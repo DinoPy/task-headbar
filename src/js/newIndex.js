@@ -227,7 +227,6 @@ function addTask(title) {
 		idNew: ID,
 		titleNew: title,
 		createdAtNew: formatCurrentDate(),
-		profileNew: 'any',
 		taskElNew: document.createElement('div'),
 		childrenEl: {
 			titleEl: document.createElement('p'),

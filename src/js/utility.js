@@ -24,7 +24,6 @@ export class Task {
 		idNew,
 		titleNew,
 		createdAtNew,
-		profileNew,
 		taskElNew,
 		childrenEl,
 		completedTasks,
@@ -39,7 +38,6 @@ export class Task {
 		const createdAt = createdAtNew;
 		let taskEl = taskElNew;
 		let children = childrenEl;
-		const profile = profileNew;
 		let isFocused = false;
 		let taskTimerInterval = null;
 		let description = 'no description';
@@ -124,7 +122,6 @@ export class Task {
 				createdAt,
 				completedAt: this.formatCurrentDate(),
 				duration: this.formatTaskDuration(Math.ceil(duration / 1000)),
-				profile,
 				category,
 			});
 		};

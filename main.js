@@ -30,6 +30,8 @@ function createTaskContextMenu() {}
 function deleteTask(props) {}
 function loadSettings() {}
 function updateSettings() {}
+function writeFile(file) {}
+function getCsvHeaders(list) {}
 
 loadSettings();
 
@@ -144,20 +146,10 @@ async function exportCsv(completedTasks) {
 	// if something else but the task object is received, return.
 	completedTasks = completedTasks.filter((i) => typeof i === 'object');
 
-	// get the list of header items
-	const headers = Object.keys(completedTasks[0]);
-
-	// generate a string of those lists that's separated by , and \n at the end
-	const rowHeader = headers.reduce(
-		(acc, cv, ci) => acc + cv + (ci !== headers.length - 1 ? ',' : '\n'),
-		''
-	);
-
-	// assign the final csvString the first header row
-	csvString = rowHeader;
-
 	// create current task
 	let currentTask = '';
+	let csvString = '';
+	const headers = Object.keys(completedTasks[0]);
 
 	// loop over each task
 	for (let i = 0; i < completedTasks.length; i++) {
@@ -179,18 +171,24 @@ async function exportCsv(completedTasks) {
 		currentTask = '';
 	}
 
-	await fs.promises.mkdir(`${homeDir}/Documents/Tasks/Logs`, {
-		recursive: true,
-	});
-
-	// save the CSV
-	fs.writeFile(
-		`${homeDir}/Documents/Tasks/Logs/${getCurrentDayFormated()} tasks log.csv`,
-		csvString,
+	fs.access(
+		path.join(homeDir, 'Documents', 'Tasks', 'Logs', 'Tasks Log.csv'),
 		(e) => {
-			console.log(e);
+			if (e) {
+				csvString = getCsvHeaders(completedTasks) + csvString;
+				writeFile(csvString);
+			} else writeFile(csvString);
 		}
 	);
+
+	// save the CSV - to individual file
+	// fs.writeFile(
+	// 	`${homeDir}/Documents/Tasks/Logs/${getCurrentDayFormated()} tasks log.csv`,
+	// 	csvString,
+	// 	(e) => {
+	// 		console.log(e);
+	// 	}
+	// );
 }
 
 function getCurrentDayFormated() {
@@ -408,6 +406,47 @@ function loadSettings() {
 		SETTINGS = DEFAULT_SETTINGS;
 	}
 	CATEGORIES = SETTINGS.categories;
+}
+function writeFile(file) {
+	tasksLogPath = path.join(
+		homeDir,
+		'Documents',
+		'Tasks',
+		'Logs',
+		'Tasks Log.csv'
+	);
+
+	try {
+		fs.appendFile(tasksLogPath, file, (e, data) => {
+			console.log(e);
+			if (e && e.code === 'ENOENT') {
+				fs.mkdirSync(
+					path.join(homeDir, 'Documents', 'Tasks', 'Logs'),
+					{ recursive: true },
+					(e) => {
+						console.log(e);
+					}
+				);
+
+				writeFile(file);
+			}
+		});
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+function getCsvHeaders(list) {
+	// get the list of header items
+	const headers = Object.keys(list[0]);
+
+	// generate a string of header items that's separated by , and \n at the end
+	const rowHeader = headers.reduce(
+		(acc, cv, ci) => acc + cv + (ci !== headers.length - 1 ? ',' : '\n'),
+		''
+	);
+
+	return rowHeader;
 }
 
 // ensures the communication between the children windows and the main task window.
