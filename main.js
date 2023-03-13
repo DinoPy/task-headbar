@@ -17,15 +17,22 @@ const player = require('play-sound')();
 app.setName('Task yourself');
 app.setAppUserModelId(app.name);
 
+let SETTINGS;
 let win;
 let taskWindow;
 let availableDisplays;
+let isTimerRunning = true;
+let CATEGORIES = [];
 
 function exportCsv(completedTasks) {}
 function getCurrentDayFormated() {}
 function createContextMenu() {}
 function createTaskContextMenu() {}
 function deleteTask(props) {}
+function loadSettings() {}
+function updateSettings() {}
+
+loadSettings();
 
 const createWindow = () => {
 	availableDisplays = screen.getAllDisplays();
@@ -68,13 +75,21 @@ const createWindow = () => {
 		new Notification({
 			title: 'Interval Ended',
 			body: args,
-			silent: true,
+			silent: false,
 			icon: 'src/images/dino.ico',
 			timeoutType: 'never',
 		}).show();
 		const sound = args === 'Start pause.' ? 'break' : 'work';
+		const soundPath = path.join(
+			homeDir,
+			'Documents',
+			'Tasks',
+			'sounds',
+			`${sound}.mp3`
+		);
+
 		if (process.platform !== 'linux')
-			player.play(`src/sounds/${sound}.mp3`, (err) => {
+			player.play(soundPath, { timeout: 5000 }, (err) => {
 				console.log(err);
 			});
 	});
@@ -85,6 +100,14 @@ const createWindow = () => {
 
 	ipc.on('show-general-context-menu', () => {
 		createContextMenu();
+	});
+
+	// once the page is loaded we send some variables sourcing from settings
+	win.webContents.on('did-finish-load', () => {
+		win.webContents.send('data-from-main', {
+			isTimerRunning,
+			categories: CATEGORIES,
+		});
 	});
 };
 
@@ -98,6 +121,9 @@ app
 			win.show();
 			win.webContents.send('addTask');
 		});
+		// globalShortcut.register('CommandOrControl+Shift+j', () => {
+		// 	win.webContents.openDevTools();
+		// });
 	})
 	.then(() => {
 		createWindow();
@@ -115,7 +141,6 @@ app.on('window-all-closed', () => {
 async function exportCsv(completedTasks) {
 	// return if the list has no tasks
 	if (completedTasks.length < 1) return;
-	console.log(completedTasks);
 
 	// if something else but the task object is received, return.
 	completedTasks = completedTasks.filter((i) => typeof i === 'object');
@@ -219,6 +244,21 @@ function createContextMenu() {
 		})
 	);
 
+	menu.append(
+		new MenuItem({
+			label: 'Toggle timer',
+			toolTip: `Timer is currently ${
+				isTimerRunning ? 'running' : 'deactivated'
+			}`,
+			click: () => {
+				isTimerRunning = !isTimerRunning;
+				SETTINGS.isTimerRunning = isTimerRunning;
+				updateSettings();
+				win.webContents.send('toggle-countdown-timer', { isTimerRunning });
+			},
+		})
+	);
+
 	menu.popup(win, 0, 0);
 }
 
@@ -229,7 +269,7 @@ function createTaskContextMenu(args) {
 		new MenuItem({
 			label: 'Edit',
 			click: () => {
-				createPopUpWindow(args);
+				createPopUpWindow({ ...args, categories: CATEGORIES });
 			},
 		})
 	);
@@ -243,6 +283,34 @@ function createTaskContextMenu(args) {
 		})
 	);
 
+	ctxMenu.append(
+		new MenuItem({
+			label: 'Complete',
+			click: () => {
+				completeTask(args);
+			},
+		})
+	);
+	ctxMenu.append(
+		new MenuItem({
+			label: 'Category',
+			submenu: CATEGORIES.map(
+				(cat) =>
+					new MenuItem({
+						label: cat,
+						type: 'radio',
+						checked: cat === args.category ? true : false,
+						click: () => {
+							win.webContents.send('update-task-category', {
+								id: args.id,
+								newCategory: cat,
+							});
+						},
+					})
+			),
+		})
+	);
+
 	ctxMenu.popup(win, 0, 0);
 }
 
@@ -253,8 +321,6 @@ function createPopUpWindow(props) {
 		minHeight: 200,
 		minimizable: false,
 		resizable: false,
-		movable: false,
-		parent: win,
 		modal: true,
 		alwaysOnTop: true,
 		show: false,
@@ -300,9 +366,58 @@ function deleteTask(props) {
 	win.webContents.send('deleteTask', props);
 }
 
+function completeTask(props) {
+	win.webContents.send('completeTask', props);
+}
+
+function updateSettings() {
+	fs.writeFile(
+		path.join(homeDir, 'Documents', 'Tasks', 'User-Prefferences.json'),
+		JSON.stringify(SETTINGS, null, 2),
+		(e) => {
+			console.log(e);
+		}
+	);
+}
+
+function loadSettings() {
+	const DEFAULT_SETTINGS = {
+		isTimerRunning: true,
+		startBreakSoundPath: '',
+		endBreakSoundPath: '',
+		theme: '?',
+		categories: [],
+	};
+	try {
+		SETTINGS = JSON.parse(
+			fs.readFileSync(
+				path.join(homeDir, 'Documents', 'Tasks', 'User-Prefferences.json'),
+				'utf-8'
+			)
+		);
+	} catch (error) {
+		fs.mkdir(path.join(homeDir, 'Documents', 'Tasks'), (e) => {
+			console.log(e);
+		});
+
+		fs.writeFileSync(
+			path.join(homeDir, 'Documents', 'Tasks', 'User-Prefferences.json'),
+			JSON.stringify(DEFAULT_SETTINGS, null, 2)
+		);
+
+		SETTINGS = DEFAULT_SETTINGS;
+	}
+	CATEGORIES = SETTINGS.categories;
+}
+
 // ensures the communication between the children windows and the main task window.
-ipc.on('msg-from-child-to-parent', (e, data) => {
+ipc.on('msg-from-child-to-parent', (e, { categories, ...data }) => {
 	win.webContents.send('msg-redirected-to-parent', data);
+	CATEGORIES = categories;
+	SETTINGS['categories'] = categories;
+
+	updateSettings();
+
 	if (taskWindow) taskWindow.close();
 });
 

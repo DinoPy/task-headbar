@@ -11,25 +11,45 @@ const noActiveTaskParagraph = document.querySelector('.noActiveTaskWarning');
 
 const tasks = {};
 let ID = 0;
+let isTimerRunning = false;
+let lastCategorySelected = 'none';
+
+ipc.on('data-from-main', (e, data) => {
+	isTimerRunning = data.isTimerRunning;
+});
+
+ipc.on('toggle-countdown-timer', (e, data) => {
+	isTimerRunning = data.isTimerRunning;
+});
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
 });
 
 ipc.on('msg-redirected-to-parent', (e, data) => {
-	console.log(data);
 	if (typeof data.id !== 'number') return;
 
 	tasks[data.id].updateCategory(data.category);
 	tasks[data.id].updateDescription(data.description);
 	tasks[data.id].updateTitle(data.title);
+	lastCategorySelected = data.category;
 });
 
 ipc.on('deleteTask', (e, data) => {
 	tasks[data.id].removeFocus();
 	tasks[data.id].destroySelfFromDOM();
 	delete tasks[data.id];
-	console.log(completedTasks);
+});
+
+ipc.on('completeTask', (e, data) => {
+	tasks[data.id].removeFocus();
+	tasks[data.id].addToCompletedTaskList();
+	tasks[data.id].destroySelfFromDOM();
+});
+
+ipc.on('update-task-category', (e, data) => {
+	tasks[data.id].updateCategory(data.newCategory);
+	lastCategorySelected = data.newCategory;
 });
 
 bodyEl.addEventListener('mouseup', (e) => {
@@ -62,7 +82,7 @@ skipPauseBtn.addEventListener('click', handleSkipBreak);
 
 function startCountdown() {
 	intervalId = setInterval(function () {
-		countdown--; // main timer countdown value
+		if (isTimerRunning) countdown--; // main timer countdown value
 		countdownText.textContent = formatCountdownText(countdown); //
 		bodyEl.style.backgroundColor = '';
 		if (countdown === 0) {
@@ -212,6 +232,7 @@ function addTask(title) {
 			titleEl: document.createElement('p'),
 			timerEl: document.createElement('p'),
 		},
+		categoryNew: lastCategorySelected,
 		completedTasks,
 		tasks,
 		taskContainer,
@@ -236,7 +257,6 @@ window.tasks = tasks;
 setInterval(() => {
 	const taskList = Object.keys(tasks);
 	const activeTasks = taskList.filter((i) => tasks[i].getIsFocusedStatus());
-	console.log(activeTasks.length);
 	if (
 		activeTasks.length === 0 &&
 		barDetails.barStatus === 'active' &&

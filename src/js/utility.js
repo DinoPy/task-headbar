@@ -32,6 +32,7 @@ export class Task {
 		taskContainer,
 		barDetails,
 		noActiveTaskWarning,
+		categoryNew,
 	}) {
 		const id = idNew;
 		let title = titleNew;
@@ -43,7 +44,7 @@ export class Task {
 		let taskTimerInterval = null;
 		let description = 'no description';
 		let duration = 0;
-		let category = 'none';
+		let category = categoryNew;
 		let toggledFocusAt = 0;
 
 		this.updateTitle = (newTitle) => {
@@ -119,15 +120,13 @@ export class Task {
 		this.addToCompletedTaskList = () => {
 			completedTasks.push({
 				title,
-				description,
+				description: '"' + description.replaceAll(',', '') + '"',
 				createdAt,
 				completedAt: this.formatCurrentDate(),
 				duration: this.formatTaskDuration(Math.ceil(duration / 1000)),
 				profile,
 				category,
 			});
-
-			console.log(completedTasks);
 		};
 
 		this.addTaskListeners = () => {
@@ -171,7 +170,8 @@ export class Task {
 		};
 
 		this.openCtxMenu = () => {
-			ipc.send('show-task-context-menu', { id, title, description, category });
+			const props = { id, title, description, category };
+			ipc.send('show-task-context-menu', props);
 		};
 
 		this.formatCountdownText = (time) => {
