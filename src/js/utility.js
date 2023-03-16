@@ -57,10 +57,15 @@ export class Task {
 
 		this.updateCategory = (newCategory) => {
 			category = newCategory;
+			children.categoryEl.textContent = newCategory;
 		};
 
 		this.getIsFocusedStatus = () => {
 			return isFocused;
+		};
+
+		this.getCategory = () => {
+			return category;
 		};
 
 		this.addFocus = () => {
@@ -80,13 +85,13 @@ export class Task {
 		};
 
 		this.startTimer = () => {
-			// setting the timeElapsed to duration will allow to save how much time has passed if the task is toggled on and off.
-			// the value is devided by 1000 not to use MS
-			let taskTimeElapsed = Math.floor(duration / 1000);
 			// settings up the interval
+
 			taskTimerInterval = setInterval(function () {
-				taskTimeElapsed++;
-				children.timerEl.textContent = formatCountdownText(taskTimeElapsed);
+				let timePassed = Math.floor(
+					(duration + +new Date() - toggledFocusAt) / 1000
+				);
+				children.timerEl.textContent = formatCountdownText(timePassed);
 			}, 1000);
 
 			// update when the task was focused
@@ -155,9 +160,12 @@ export class Task {
 			children.titleEl.textContent = title;
 			children.timerEl.classList.add('activeTaskTimer');
 			children.timerEl.textContent = '00 : 00';
+			children.categoryEl.classList.add('taskCategory');
+			children.categoryEl.textContent = category;
 
 			taskEl.append(children.titleEl);
 			taskEl.append(children.timerEl);
+			taskEl.append(children.categoryEl);
 		};
 
 		this.setTaskUp = () => {

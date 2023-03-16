@@ -29,11 +29,19 @@ closeBtn.addEventListener('click', () => {
 
 ipc.on('msg-redirected-to-parent', (e, data) => {
 	if (typeof data.id !== 'number') return;
+	lastCategorySelected =
+		data.category !== tasks[data.id].getCategory()
+			? data.category
+			: lastCategorySelected;
 
 	tasks[data.id].updateCategory(data.category);
 	tasks[data.id].updateDescription(data.description);
 	tasks[data.id].updateTitle(data.title);
-	lastCategorySelected = data.category;
+	console.log(
+		data.category,
+		tasks[data.id].getCategory(),
+		lastCategorySelected
+	);
 });
 
 ipc.on('deleteTask', (e, data) => {
@@ -231,6 +239,7 @@ function addTask(title) {
 		childrenEl: {
 			titleEl: document.createElement('p'),
 			timerEl: document.createElement('p'),
+			categoryEl: document.createElement('p'),
 		},
 		categoryNew: lastCategorySelected,
 		completedTasks,

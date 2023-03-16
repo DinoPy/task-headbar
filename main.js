@@ -8,6 +8,7 @@ const {
 	Menu,
 	MenuItem,
 } = require('electron');
+require('dotenv').config();
 const path = require('path');
 const ipc = ipcMain;
 const fs = require('fs');
@@ -122,9 +123,9 @@ app
 			win.show();
 			win.webContents.send('addTask');
 		});
-		// globalShortcut.register('CommandOrControl+Shift+j', () => {
-		// 	win.webContents.openDevTools();
-		// });
+		globalShortcut.register('CommandOrControl+Shift+j', () => {
+			win.webContents.openDevTools();
+		});
 	})
 	.then(() => {
 		createWindow();

@@ -50,6 +50,14 @@ body {
 	text-overflow: ellipsis;
 }
 
+.task > .taskCategory {
+	font-size: 9px;
+	position: absolute;
+	top: -2px;
+	left: 5px;
+	text-transform: capitalize;
+}
+
 .mainContent {
 	height: 100%;
 	display: flex;
@@ -114,7 +122,7 @@ body {
 	position: absolute;
 	top: -2px;
 	right: 8px;
-	font-size: 10px;
+	font-size: 9px;
 	font-weight: normal;
 }
 

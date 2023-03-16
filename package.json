@@ -11,6 +11,8 @@
     "build": "electron-builder"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
+    "googleapis": "^113.0.0",
     "play-sound": "^1.1.5"
   },
   "license": "MIT"
