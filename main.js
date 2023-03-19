@@ -117,8 +117,8 @@ app
 	.whenReady()
 	.then(() => {
 		// setting up global shortcuts.
-		// globalShortcut.register('CommandOrControl+R', () => {});
-		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
+		globalShortcut.register('CommandOrControl+R', () => {});
+		globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
 			win.show();
 			win.webContents.send('addTask');
