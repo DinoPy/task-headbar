@@ -111,14 +111,28 @@ const createWindow = () => {
 			categories: CATEGORIES,
 		});
 	});
+
+	win.on('focus', (event) => {
+		electronLocalshortcut.register(
+			win,
+			['CommandOrControl+R', 'CommandOrControl+Shift+R', 'F5'],
+			() => {}
+		);
+	});
+
+	win.on('blur', (event) => {
+		electronLocalshortcut.unregisterAll(win);
+	});
 };
 
 app
 	.whenReady()
 	.then(() => {
 		// setting up global shortcuts.
-		globalShortcut.register('CommandOrControl+R', () => {});
-		globalShortcut.register('CommandOrControl+Shift+R', () => {});
+		// globalShortcut.register('CommandOrControl+R', (e) => {
+		// 	console.log(e);
+		// });
+		// globalShortcut.register('CommandOrControl+Shift+R', () => {});
 		globalShortcut.register('CommandOrControl+Shift+Space', () => {
 			win.show();
 			win.webContents.send('addTask');
@@ -130,6 +144,8 @@ app
 	.then(() => {
 		createWindow();
 	});
+
+const electronLocalshortcut = require('electron-localshortcut');
 
 // if all windows are close then quit app.
 app.on('window-all-closed', () => {
