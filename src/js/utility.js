@@ -121,14 +121,8 @@ export class Task {
 		};
 
 		this.addToCompletedTaskList = () => {
-			completedTasks.push({
-				title,
-				description: '"' + description.replaceAll(',', '') + '"',
-				createdAt,
-				completedAt: this.formatCurrentDate(),
-				duration: this.formatTaskDuration(Math.ceil(duration / 1000)),
-				category,
-			});
+			completedTasks.push(this.formatCompletedTask('Object'));
+            ipc.send('post-task-to-sheets', this.formatCompletedTask('Array'));
 		};
 
 		this.addTaskListeners = () => {
@@ -178,6 +172,33 @@ export class Task {
 			const props = { id, title, description, category };
 			ipc.send('show-task-context-menu', props);
 		};
+
+        this.formatCompletedTask = (type) => {
+            const formatedDescription = '"' + description.replaceAll(',', '') + '"';
+            const formatedCompletedAt = this.formatCurrentDate();
+            const formatedDuration = this.formatTaskDuration(Math.ceil(duration / 1000));
+
+            switch (type) {
+                case 'Object':
+                    return {
+                        title,
+                        description: formatedDescription,
+                        createdAt,
+                        completedAt: formatedCompletedAt,
+                        duration: formatedDuration,
+                        category,
+                    }
+                case 'Array':
+                    return [
+                        title,
+                        description,
+                        createdAt,
+                        formatedCompletedAt,
+                        formatedDuration,
+                        category,
+                    ]
+            }
+        }
 
 		this.formatCountdownText = (time) => {
 			// getting the value of minutes

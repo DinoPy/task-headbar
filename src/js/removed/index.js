@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+import { ipcRenderer } from 'electron/renderer';
 const ipc = ipcRenderer;
 
 const closeBtn = document.getElementById('closeBtn');
@@ -7,9 +7,6 @@ const timerBtn = document.getElementById('timerBtn');
 const playPauseBtn = document.getElementById('playPauseIcon');
 const skipPauseBtn = document.getElementById('skipPauseIcon');
 const bodyEl = document.querySelector('body');
-
-let ID = 0;
-// prototypes
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
@@ -79,9 +76,10 @@ function startCountdown() {
 			}
 
 			countdownText.textContent = formatCountdownText(countdown);
-			playPauseIcon.src = 'images/play.svg';
+			playPauseBtn.src = 'images/play.svg';
 			isCountingDown = false;
 		}
+
 	}, 1000);
 }
 
@@ -164,12 +162,12 @@ function handleAddTask() {
 		addTaskContainer.prepend(addTaskInput);
 		addTaskInput.focus();
 	} else {
-		const taskTitle = addTaskInput.value;
+		const taskTitle = addTaskInput.value.replaceAll('"','');
 
 		if (taskTitle.length > 0) {
 			tasks.push({
 				title: taskTitle,
-				description: 'No description',
+				description: "No description",
 				createdAt: formatCurrentDate(),
 				hasTimer: false,
 				completedAt: '',
@@ -184,12 +182,6 @@ function handleAddTask() {
 
 // --------------- RENDER TASKS ------------------ //
 const taskContainer = document.querySelector('.taskContainer');
-
-function renderTasks(tasks) {
-	for (task of tasks) {
-		addTask(task.title);
-	}
-}
 
 function addTask(title) {
 	// will be updated per kenban notes

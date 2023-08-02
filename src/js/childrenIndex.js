@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+import { parseString } from './helpers.js';
 const ipc = ipcRenderer;
 
 let ID;
@@ -29,7 +30,6 @@ ipc.on('data-from-parent', (e, data) => {
 });
 
 const populateCategoryOptions = () => {
-	console.log(categories);
 	if (!categories.includes(category)) {
 		categories.push(category);
 	}
@@ -70,7 +70,7 @@ const listenForNewCat = () => {
 	});
 
 	addNewCategoryBtn.addEventListener('click', (e) => {
-		const value = addCategoryInput.value.replaceAll(',', '');
+		const value = parseString(addCategoryInput.value);
 		if (value.length < 1) {
 			categorySelect.value = category;
 			dialogEl.close();
@@ -100,18 +100,19 @@ closeBtn.addEventListener('click', () => {
 });
 
 submitBtn.addEventListener('click', () => {
-	if (titleInput.value.length > 1) {
+	if (titleInput.value.length > 3) {
 		ipc.send('msg-from-child-to-parent', {
-			title: titleInput.value.replaceAll(',', ''),
+            title: parseString(titleInput.value),
 			category: categorySelect.value.replaceAll(',', ''),
-			description: descriptionInput.value,
+			description: parseString(descriptionInput.value),
 			id: ID,
 			categories: categories.filter((c) => c !== 'none'),
 		});
 	}
 });
 
-titleInput.onchange((e) => {
+titleInput.addEventListener('change', (e) => {
+    console.log(categorySelect.value);
 	const titleLength = e.target.value.length;
 	if (titleLength < 3) {
 		titleInput.placeholder = 'Minimum length of 1 characters';
@@ -119,7 +120,7 @@ titleInput.onchange((e) => {
 		titleInput.style.border = '1px solid red';
 	} else {
 		titleInput.placeholder = 'Title';
-		titleInput.style.backgroundColor = '#949aa7';
+		titleInput.style.backgroundColor = '#292c35';
 		titleInput.style.border = 'none';
 	}
 });

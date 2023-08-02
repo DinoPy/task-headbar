@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
 const ipc = ipcRenderer;
 import { Task, formatCurrentDate, formatCountdownText } from './utility.js';
+import { parseString } from './helpers.js';
 
 const closeBtn = document.getElementById('closeBtn');
 const countdownText = document.getElementById('countdown');
@@ -10,18 +11,22 @@ const bodyEl = document.querySelector('body');
 const noActiveTaskParagraph = document.querySelector('.noActiveTaskWarning');
 
 const tasks = {};
+const completedTasks = [];
 let ID = 0;
 let isTimerRunning = true;
 let lastCategorySelected = 'none';
 
 ipc.on('data-from-main', (e, data) => {
 	isTimerRunning = data.isTimerRunning;
-	console.log(isTimerRunning);
 });
 
 ipc.on('toggle-countdown-timer', (e, data) => {
 	isTimerRunning = data.isTimerRunning;
 });
+
+ipc.on('request-list-of-completed-tasks', () => {
+    ipc.send('sending-completed-tasks', completedTasks);
+})
 
 closeBtn.addEventListener('click', () => {
 	ipc.send('closeApp', completedTasks);
@@ -37,11 +42,6 @@ ipc.on('msg-redirected-to-parent', (e, data) => {
 	tasks[data.id].updateCategory(data.category);
 	tasks[data.id].updateDescription(data.description);
 	tasks[data.id].updateTitle(data.title);
-	console.log(
-		data.category,
-		tasks[data.id].getCategory(),
-		lastCategorySelected
-	);
 });
 
 ipc.on('deleteTask', (e, data) => {
@@ -195,7 +195,6 @@ const addTaskContainer = document.getElementById('addTaskContainer');
 const addTaskBtn = document.getElementById('addTaskBtn');
 
 let isAddingTask = false;
-const completedTasks = [];
 let addTaskInput;
 
 addTaskBtn.addEventListener('click', handleAddTask);
@@ -230,10 +229,9 @@ function handleAddTask() {
 const taskContainer = document.querySelector('.taskContainer');
 
 function addTask(title) {
-	title = title.replaceAll(`"`, `'`).replaceAll(`,`, ``);
 	tasks[ID] = new Task({
 		idNew: ID,
-		titleNew: title,
+		titleNew: parseString(title),
 		createdAtNew: formatCurrentDate(),
 		taskElNew: document.createElement('div'),
 		childrenEl: {
@@ -255,8 +253,12 @@ function addTask(title) {
 	ID++;
 }
 
-ipc.on('addTask', () => {
-	handleAddTask();
+ipc.on('addTask', () => handleAddTask());
+
+ipc.on('addEmergencyTask', () => {
+    addTask('To be replaced');
+    Object.keys(tasks).forEach(t => tasks[t].removeFocus());
+    tasks[ID-1].addFocus();
 });
 
 window.tasks = tasks;

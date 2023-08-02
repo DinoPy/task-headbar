@@ -8,12 +8,13 @@
   },
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "dev": "electron --trace-warnings ."
   },
   "dependencies": {
     "dotenv": "^16.0.3",
     "electron-localshortcut": "^3.2.1",
-    "googleapis": "^113.0.0",
+    "googleapis": "^118.0.0",
     "play-sound": "^1.1.5"
   },
   "license": "MIT"
